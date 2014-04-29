@@ -1107,8 +1107,8 @@ void BOT()
 
 				clock_t tStart = clock();
 
-				curBoards[index].mBoard.findBestMove(myScore, 1, row, col);
-				//curBoards[index].mBoard.findBestMoveOMP(myScore,1,row,col);
+				//curBoards[index].mBoard.findBestMove(myScore, 1, row, col);
+				curBoards[index].mBoard.findBestMoveOMP(myScore, 1, row, col);
 				double timeTaken = (double)(clock() - tStart) / CLOCKS_PER_SEC;
 
 				vector <BoardCollection> testBoards = createBoard();
