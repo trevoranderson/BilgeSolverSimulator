@@ -14,6 +14,4 @@ Speed: Fully threaded meaning your 4 depth will likely take much less time than 
 Multiclient Support: Only requires windows to be visible on the main monitor for piece recognition. It will do the work of balancing moves between them for you.
 
 #TODO:
-- Add the updated Mouse-Movement algorithms.
-- Make the Score Matrix and search depth configurable from a settings file.
 - Add some more robustness.
