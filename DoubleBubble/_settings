@@ -4,7 +4,7 @@
 ! them all by 10
 !
 ! Depth to Search
-3
+4
 ! Single: Pieces Cleared not part of a combo 
 10
 ! Uncertainty Score: Higher value = more incentive to take good moves earlier.

@@ -690,10 +690,6 @@ void BOT()
 						continue;
 					}
 				}
-				if (myScore > 10000)
-				{
-					cout << "you expect me to believe this?" << endl;
-				}
 				// Now playback the movement;
 				POINT * curserposinit = new POINT();
 				GetCursorPos(curserposinit);
