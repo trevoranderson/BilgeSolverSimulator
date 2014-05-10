@@ -7,66 +7,6 @@ int MAXDEPTH;
 int UNCERTAINTY_SCORE;
 int SINGLESSCORE;
 
-//void initScore()
-//{
-//	for (int one = 0; one < 4; one++)
-//	{
-//		for (int two = 0; two < 4; two++)
-//		{
-//			for (int three = 0; three < 2; three++)
-//			{
-//				for (int four = 0; four < 2; four++)
-//				{
-//					scoreMat[one][two][three][four] = 0;
-//				}
-//			}
-//		}
-//	}
-//	//ima do diss TZZ style
-//	scoreMat[0][0][0][0];
-//	// single 3 -> 3pts
-//	scoreMat[0][0][0][1] = scoreMat[0][0][1][0] = scoreMat[0][1][0][0] = scoreMat[1][0][0][0] = 30;
-//	// single 4 -> 4pts
-//	scoreMat[2][0][0][0] = scoreMat[0][2][0][0] = 40;
-//	// single 5 -> 5pts
-//	scoreMat[3][0][0][0] = scoreMat[0][3][0][0] = 50;
-//	//      3x3 -> 12pts
-//	scoreMat[1][1][0][0] = scoreMat[1][0][1][0] = scoreMat[1][0][0][1] = scoreMat[0][1][1][0] = scoreMat[0][1][0][1] = scoreMat[0][0][1][1] = 120;
-//	//      3x4 -> 14pts
-//	scoreMat[2][1][0][0] = scoreMat[2][0][1][0] = scoreMat[2][0][0][1] = scoreMat[1][2][0][0] = scoreMat[0][2][1][0] = scoreMat[0][2][0][1] = 140;
-//	//      3x5 -> 16pts
-//	scoreMat[3][1][0][0] = scoreMat[3][0][1][0] = scoreMat[3][0][0][1] = scoreMat[1][3][0][0] = scoreMat[0][3][1][0] = scoreMat[0][3][0][1] = 160;
-//	//		4x4 -> 18
-//	scoreMat[2][2][0][0] = 180;
-//	//		4x5 -> 20
-//	scoreMat[2][3][0][0] = scoreMat[3][2][0][0] = 200;
-//	//		5x5 -> 22
-//	scoreMat[3][3][0][0] = 220;
-//	//333 Bingo -> 24pts
-//	scoreMat[1][1][1][0] = scoreMat[1][1][0][1] = scoreMat[1][0][1][1] = scoreMat[0][1][1][1] = 240;
-//	//334 Bingo -> 27pts
-//	scoreMat[2][1][1][0] = scoreMat[2][1][0][1] = scoreMat[2][0][1][1] = scoreMat[1][2][1][0] = scoreMat[1][2][0][1] = scoreMat[0][2][1][1] = 270;
-//	//344 Bingo -> 30pts
-//	scoreMat[2][2][1][0] = scoreMat[2][2][0][1] = 300;
-//	//335 Bingo -> 30pts
-//	scoreMat[3][1][1][0] = scoreMat[3][1][0][1] = scoreMat[3][0][1][1] = scoreMat[1][3][1][0] = scoreMat[1][3][0][1] = scoreMat[0][3][1][1] = 300;
-//	//345 Bingo -> 33pts
-//	scoreMat[3][2][1][0] = scoreMat[3][2][0][1] = scoreMat[2][3][1][0] = scoreMat[2][3][0][1] = 330;
-//	//355 Bingo -> 36pts
-//	scoreMat[3][3][1][0] = scoreMat[3][3][0][1] = 360;
-//	//3333donkey-> 80pts
-//	scoreMat[1][1][1][1] = 800;
-//	//3334donkey-> 88pts
-//	scoreMat[2][1][1][1] = scoreMat[1][2][1][1] = 880;
-//	//3344donkey-> 96pts
-//	scoreMat[2][2][1][1] = 960;
-//	//3335vegas-> 144pts
-//	scoreMat[3][1][1][1] = scoreMat[1][3][1][1] = 1440;
-//	//3345vegas-> 156pts
-//	scoreMat[3][2][1][1] = scoreMat[2][3][1][1] = 1560;
-//	//3355vegas-> 168pts
-//	scoreMat[3][3][1][1] = 1680;
-//}
 double Board::uncertaintyScore()
 {
 	double count = 0;

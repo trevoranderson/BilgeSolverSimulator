@@ -19,398 +19,9 @@ class PBOARD
 public:
 	Board * myBoard;
 };
-class BilgeHist
-{
-	//Histogram for bilge scoring purposes.
-public:
-	BilgeHist()
-	{
-		for (int a = 0; a < 4; a++)
-		{
-			for (int b = 0; b < 4; b++)
-			{
-				for (int c = 0; c < 2; c++)
-				{
-					for (int d = 0; d < 2; d++)
-					{
-						frequencies[a][b][c][d] = 0;
-					}
-				}
-			}
-		}
-		numChains = 0;
-		crabScore = 0;
-		cleanable = false;
-		won = false;
-	}
-	void cleanHist()
-	{
-		for (int a = 0; a < 4; a++)
-		{
-			for (int b = 0; b < 4; b++)
-			{
-				for (int c = 0; c < 2; c++)
-				{
-					for (int d = 0; d < 2; d++)
-					{
-						frequencies[a][b][c][d] = 0;
-					}
-				}
-			}
-		}
-		numChains = 0;
-		crabScore = 0;
-		cleanable = false;
-		won = false;
-	}
 
-	double frequencies[4][4][2][2];
-	double numChains;
-	double crabScore;
-	bool won;
-	bool cleanable;
-};
-void re_cleanBoard(Board A, BilgeHist &B, int row = 0, int col = 0, int highLeft = 0, int highRight = 0, int left = 0, int right = 0)
-{
-
-	//TODO: this is inefficient: make this faster
-	// restrict domain of searching
-	int totNormCleaned = 0;
-	int totCrabsCleaned = 0;
-	int numCleaned = 1;
-	while (numCleaned > 0)
-	{
-		numCleaned = 0;
-		int normCleaned = 0;
-		int crabsCleared = 0;
-		bool cleanedSomething = false;
-		Board subBoard = A;
-		//loop through rows
-		for (int r = 0; r < NUMROWS; r++)
-		{
-			for (int c = 0; c < NUMCOLS - 3; c++)
-			{
-				if (A.mboard[r][c] == A.mboard[r][c + 1] && A.mboard[r][c] == A.mboard[r][c + 2]
-					&& A.mboard[r][c] < 'j')//!='x' && A.mboard[r][c]!='k' && A.mboard[r][c]!='p' && A.mboard[r][c]!='j')
-					//	if( !((A.mboard[r][c] ^ A.mboard[r][c+1]) + (A.mboard[r][c] ^ A.mboard[r][c+2])) 
-					//		&& A.mboard[r][c]<'j')
-				{
-					char temp = A.mboard[r][c];
-					cleanedSomething = true;
-					//We know we have at least 3 in a row: look for more
-					for (; A.mboard[r][c] == temp && c < NUMCOLS; c++)
-					{
-						subBoard.mboard[r][c] = 'o';
-						normCleaned++;
-					}
-				}
-				else if (A.mboard[r][c] == 'k' && r < WATERLEVEL)
-				{
-					subBoard.mboard[r][c] = 'o';
-					crabsCleared++;
-					cleanedSomething = true;
-				}
-			}
-		}
-		//loop the other way
-		for (int c = 0; c < NUMCOLS; c++)
-		{
-			for (int r = 0; r < NUMROWS - 3; r++)
-			{
-				if (A.mboard[r][c] == A.mboard[r + 1][c] && A.mboard[r][c] == A.mboard[r + 2][c]
-					&& A.mboard[r][c] < 'j')//!='x' && A.mboard[r][c]!='k' && A.mboard[r][c]!='p' && A.mboard[r][c]!='j' && A.mboard[r][c]!='o')
-				{
-					char temp = A.mboard[r][c];
-					cleanedSomething = true;
-					//We know we have at least 3 in a col: look for more
-					for (; A.mboard[r][c] == temp && r < NUMROWS; r++)
-					{
-						subBoard.mboard[r][c] = 'o';
-						normCleaned++;
-					}
-				}
-			}
-		}
-		if (cleanedSomething)
-		{
-			// asess cleaning with subboard, then copy over and start again
-			for (int r = 0; r < NUMROWS; r++)
-			{
-				for (int c = 0; c < NUMCOLS; c++)
-				{
-					if (subBoard.mboard[r][c] == 'o')
-					{
-						numCleaned++;
-						int rr = r;
-						for (; rr < NUMROWS - 1 && subBoard.mboard[rr][c] != 'x'; rr++)
-						{
-							subBoard.mboard[rr][c] = subBoard.mboard[rr + 1][c];
-						}
-						subBoard.mboard[rr][c] = 'x';
-						c--;
-					}
-				}
-			}
-			//now copy subBoard to board
-			memcpy(A.mboard, subBoard.mboard, 6 * 12);
-			totNormCleaned += normCleaned;
-			totCrabsCleaned += crabsCleared * crabsCleared;
-		}
-	}
-	B.crabScore += totCrabsCleaned;
-	B.numChains += totNormCleaned;
-}
-void re_editBoard(Board A, BilgeHist &B, int row, int col, int leftVert, int rightVert, int vert_left_up, int vert_right_up, int left, int right)
-{
-	//Here, we want to take the given move and remove pieces and shift to get the next valid board (with some uncertainty in pieces).
-	if (leftVert && rightVert)
-	{
-		//both sides have verticle evaluation
-
-		//calc and shift the left side
-		int topRowLeft = row - vert_left_up;
-		for (int k = topRowLeft; k < NUMROWS - (leftVert + 2); k++)
-		{
-			A.mboard[k][col] = A.mboard[k + (leftVert + 2)][col];
-		}
-		for (int k = 1; k <= (leftVert + 2); k++)
-		{
-			A.mboard[NUMROWS - k][col] = 'x';
-		}
-
-		//calc and shift right side
-		int topRowRight = row - vert_right_up;
-		int nCol = col + 1;
-		for (int k = topRowRight; k < NUMROWS - (rightVert + 2); k++)
-		{
-			A.mboard[k][nCol] = A.mboard[k + (rightVert + 2)][nCol];
-		}
-		for (int k = 1; k <= (rightVert + 2); k++)
-		{
-			A.mboard[NUMROWS - k][nCol] = 'x';
-		}
-
-		//calc and shift left and right row matches
-		if (left)
-		{
-			//double single column swaps
-			for (int k = row; k < NUMROWS - 1; k++)
-			{
-				A.mboard[k][col - 1] = A.mboard[k + 1][col - 1];
-				A.mboard[k][col - 2] = A.mboard[k + 1][col - 2];
-			}
-			A.mboard[NUMROWS - 1][col - 1] = 'x';
-			A.mboard[NUMROWS - 1][col - 2] = 'x';
-		}
-		if (right)
-		{
-			//double single column swaps
-			for (int k = row; k < NUMROWS - 1; k++)
-			{
-				A.mboard[k][col + 2] = A.mboard[k + 1][col + 2];
-				A.mboard[k][col + 3] = A.mboard[k + 1][col + 3];
-			}
-			A.mboard[NUMROWS - 1][col + 2] = 'x';
-			A.mboard[NUMROWS - 1][col + 3] = 'x';
-		}
-	}
-	else if (leftVert && !rightVert)
-	{
-		//calc and shift the left side
-		int topRowLeft = row - vert_left_up;
-		for (int k = topRowLeft; k < NUMROWS - (leftVert + 2); k++)
-		{
-			A.mboard[k][col] = A.mboard[k + (leftVert + 2)][col];
-		}
-		for (int k = 1; k <= (leftVert + 2); k++)
-		{
-			A.mboard[NUMROWS - k][col] = 'x';
-		}
-		if (left)
-		{
-			//double single column swaps
-			for (int k = row; k < NUMROWS - 1; k++)
-			{
-				A.mboard[k][col - 1] = A.mboard[k + 1][col - 1];
-				A.mboard[k][col - 2] = A.mboard[k + 1][col - 2];
-			}
-			A.mboard[NUMROWS - 1][col - 1] = 'x';
-			A.mboard[NUMROWS - 1][col - 2] = 'x';
-		}
-		if (right)
-		{
-			//triple single column swaps
-			for (int k = row; k < NUMROWS - 1; k++)
-			{
-				A.mboard[k][col + 1] = A.mboard[k + 1][col + 1];
-				A.mboard[k][col + 2] = A.mboard[k + 1][col + 2];
-				A.mboard[k][col + 3] = A.mboard[k + 1][col + 3];
-			}
-			A.mboard[NUMROWS - 1][col + 1] = 'x';
-			A.mboard[NUMROWS - 1][col + 2] = 'x';
-			A.mboard[NUMROWS - 1][col + 3] = 'x';
-		}
-	}
-	else if (rightVert && !leftVert)
-	{
-		//calc and shift right side
-		int topRowRight = row - vert_right_up;
-		for (int k = topRowRight; k < NUMROWS - (rightVert + 2); k++)
-		{
-			A.mboard[k][col + 1] = A.mboard[k + (rightVert + 2)][col + 1];
-		}
-		//set X's for right col
-		for (int k = 1; k <= (rightVert + 2); k++)
-		{
-			A.mboard[NUMROWS - k][col + 1] = 'x';
-		}
-
-		if (left)
-		{
-			//triple single column swaps
-			for (int k = row; k < NUMROWS - 1; k++)
-			{
-				A.mboard[k][col] = A.mboard[k + 1][col];
-				A.mboard[k][col - 1] = A.mboard[k + 1][col - 1];
-				A.mboard[k][col - 2] = A.mboard[k + 1][col - 2];
-			}
-			A.mboard[NUMROWS - 1][col] = 'x';
-			A.mboard[NUMROWS - 1][col - 1] = 'x';
-			A.mboard[NUMROWS - 1][col - 2] = 'x';
-
-		}
-		if (right)
-		{
-			//double single column swaps
-			for (int k = row; k < NUMROWS - 1; k++)
-			{
-				A.mboard[k][col + 2] = A.mboard[k + 1][col + 2];
-				A.mboard[k][col + 3] = A.mboard[k + 1][col + 3];
-			}
-			A.mboard[NUMROWS - 1][col + 2] = 'x';
-			A.mboard[NUMROWS - 1][col + 3] = 'x';
-		}
-	}
-	else
-	{
-		if (left)
-		{
-			//triple single column swaps
-			for (int k = row; k < NUMROWS - 1; k++)
-			{
-				A.mboard[k][col] = A.mboard[k + 1][col];
-				A.mboard[k][col - 1] = A.mboard[k + 1][col - 1];
-				A.mboard[k][col - 2] = A.mboard[k + 1][col - 2];
-			}
-			A.mboard[NUMROWS - 1][col] = 'x';
-			A.mboard[NUMROWS - 1][col - 1] = 'x';
-			A.mboard[NUMROWS - 1][col - 2] = 'x';
-		}
-		if (right)
-		{
-			//double single column swaps
-			for (int k = row; k < NUMROWS - 1; k++)
-			{
-				A.mboard[k][col + 1] = A.mboard[k + 1][col + 1];
-				A.mboard[k][col + 2] = A.mboard[k + 1][col + 2];
-				A.mboard[k][col + 3] = A.mboard[k + 1][col + 3];
-			}
-			A.mboard[NUMROWS - 1][col + 1] = 'x';
-			A.mboard[NUMROWS - 1][col + 2] = 'x';
-			A.mboard[NUMROWS - 1][col + 3] = 'x';
-		}
-	}
-	if (left || right || leftVert || rightVert)
-	{
-		re_cleanBoard(A, B, row, col, vert_left_up, vert_right_up, left, right);
-	}
-	return;
-}
-void re_evalMove(Board A, int row, int col, BilgeHist &B)
-{ //row and column mark the piece on the left side of the move
-	//this function evualates the move its given
-	//col should be >=0 and less than 6;
-	//do da swap
-	B.cleanable = true;
-	char temp = A.mboard[row][col];
-	A.mboard[row][col] = A.mboard[row][col + 1];
-	A.mboard[row][col + 1] = temp;
-
-	int vert_left_down = 0;
-	int k = 1;
-	for (; (row + k) < NUMROWS && A.mboard[row + k][col] == A.mboard[row][col]; k++)
-	{
-	}
-	vert_left_down += k - 1;
-
-	int vert_left_up = 0;
-	for (k = 1; (row - k) >= 0 && A.mboard[row - k][col] == A.mboard[row][col]; k++)
-	{
-	}
-	vert_left_up += k - 1;
-
-
-	int vert_right_down = 0;
-	int rCol = col + 1;
-	for (k = 1; (row + k) < NUMROWS && A.mboard[row + k][rCol] == A.mboard[row][rCol]; k++)
-	{
-	}
-	vert_right_down += k - 1;
-
-	int vert_right_up = 0;
-	for (k = 1; (row - k) >= 0 && A.mboard[row - k][rCol] == A.mboard[row][rCol]; k++)
-	{
-	}
-	vert_right_up += k - 1;
-
-	int left = 0;
-	int right = 0;
-	if (col >= 2)
-	{//fill left
-		if (A.mboard[row][col - 1] == A.mboard[row][col] && A.mboard[row][col - 2] == A.mboard[row][col])
-		{
-			left = 1;
-		}
-	}
-	if (col < 3)
-	{ //fill right
-		if (A.mboard[row][col + 2] == A.mboard[row][col + 1] && A.mboard[row][col + 3] == A.mboard[row][col + 1])
-		{
-			right = 1;
-		}
-	}
-
-	int leftVert = vert_left_up + vert_left_down + 1 - 2;
-	if (leftVert < 0)
-	{
-		leftVert = 0;
-	}
-	int rightVert = vert_right_down + vert_right_up + 1 - 2;
-	if (rightVert < 0)
-	{
-		rightVert = 0;
-	}
-	B.frequencies[leftVert][rightVert][left][right]++;
-	re_editBoard(A, B, row, col, leftVert, rightVert, vert_left_up, vert_right_up, left, right);
-	return;
-}
 enum BOARDSTATUS { ACTIVE, SCOREBOARD, NOTVALID };
-struct Scoreboard
-{
-	Scoreboard()
-	{
-		frankerX = -1;
-		frankerY = -1;
-		haswellX = -1;
-		haswellY = -1;
-		curScoreParsed = false;
-	}
-	int frankerX;
-	int frankerY;
-	int haswellX;
-	int haswellY;
-	bool curScoreParsed;
-};
+
 class BoardCollection
 {
 public:
@@ -426,40 +37,7 @@ public:
 	int anchorY;
 	BOARDSTATUS status;
 	int myScore;
-	Scoreboard pirate_locs;
 };
-void output_hists(vector<BilgeHist> output, BoardCollection A)
-{
-	ofstream histout;//("");
-	histout.open("BilgeHists.txt", fstream::out | fstream::app);
-	histout << "Number of Hists" << endl;
-	histout << output.size() << endl;
-	for (int k = 0; k < output.size(); k++)
-	{
-		histout << "Hist ID" << endl;
-		histout << k << endl;
-		histout << "Did we win this league" << endl;
-		histout << (A.pirate_locs.frankerY < A.pirate_locs.haswellY) << endl;
-		histout << "Chain Scores" << endl;
-		histout << output[k].numChains << endl;
-		histout << "Crab Scores" << endl;
-		histout << output[k].crabScore << endl;
-		for (int a = 0; a < 4; a++)
-		{
-			for (int b = 0; b < 4; b++)
-			{
-				for (int c = 0; c < 2; c++)
-				{
-					for (int d = 0; d < 2; d++)
-					{
-						histout << a << b << c << d << endl;
-						histout << output[k].frequencies[a][b][c][d] << endl;
-					}
-				}
-			}
-		}
-	}
-}
 void colorPickerLoop()
 {
 	POINT * curserpos = new POINT();
@@ -470,18 +48,6 @@ void colorPickerLoop()
 		COLORREF TURTLE = GetPixel(myHDC, curserpos->x, curserpos->y);
 		cout << hex << TURTLE << endl;
 	}
-}
-void getpixelLots()
-{
-	cout << "starting" << endl;
-	clock_t tStart = clock();
-	for (int k = 0; k < 700; k++)
-	{
-		HDC myHDC = GetDC(NULL);
-		COLORREF TURTLE = GetPixel(myHDC, 0, 0);
-	}
-	printf("Time taken: %.2fs\n", (double)(clock() - tStart) / CLOCKS_PER_SEC);
-	cout << "ending" << endl;
 }
 //BOOL SaveToFile(HBITMAP hBitmap, LPCTSTR lpszFileName)
 //{
@@ -943,7 +509,7 @@ void BOT()
 	double moveCounter = 0;
 	int myScore = 0;
 	int index = 0;
-	vector<BilgeHist> Runners;
+
 	while (true) //run the bot ad nausium
 	{
 
@@ -1093,13 +659,7 @@ void BOT()
 			}
 			else
 			{
-				if (curBoards.size() > Runners.size()) //add bilge hists until we have enough
-				{
-					while (Runners.size() < curBoards.size())
-					{
-						Runners.push_back(BilgeHist());
-					}
-				}
+				
 				int row = -1;
 				int col = -1;
 				//calculate
@@ -1149,8 +709,7 @@ void BOT()
 				MM.PlayBetweenPoints(start, Dest, BellRand(0.8, 0.8));
 				Sleep(BellRand(200, 150));
 				MM.Click();
-				//Now add the board's score to the proper bilge Hist
-				re_evalMove(curBoards[index].mBoard, row, col, Runners[index]);
+				
 
 				//increment the index
 				index = (index + 1) % curBoards.size();
@@ -1159,29 +718,6 @@ void BOT()
 		} while (prevIndex != index);
 		Sleep(100);
 	}
-}
-int countTheLines()
-{
-	std::ifstream myfile("race_results.txt");
-
-	// new lines will be skipped unless we stop it from happening:    
-	myfile.unsetf(std::ios_base::skipws);
-
-	// count the newlines with an algorithm specialized for counting:
-	unsigned line_count = std::count(
-		std::istream_iterator<char>(myfile),
-		std::istream_iterator<char>(),
-		'\n');
-
-	std::cout << "Lines: " << line_count << "\n";
-	return 0;
-}
-int coutntehliens()
-{
-	ifstream inFile("race_results.txt");
-	return count(istreambuf_iterator<char>(inFile),
-		istreambuf_iterator<char>(), '\n');
-
 }
 bool fileExists(const std::string& name) {
 	ifstream f(name.c_str());
@@ -1194,44 +730,6 @@ bool fileExists(const std::string& name) {
 		return false;
 	}
 }
-//void createScoreAlgo()
-//{
-//	ifstream infile("race_results.txt");
-//	ofstream outfile("turtle.csv");
-//	string s;
-//	int trialNum = 0;
-//	outfile << "Trial Number, Client ID, Result, chain, crab, other" << endl;
-//	for (int z = 0; z < 136; z++)
-//	{
-//		getline(infile, s); //number of hists for this lp
-//
-//		getline(infile, s); //advance past this one: we know its 2
-//		for (int j = 0; j < 2; j++)
-//		{
-//			getline(infile, s); //text
-//			getline(infile, s);// client ID
-//			int clientID = stoi(s);
-//			getline(infile, s); //text
-//			getline(infile, s); //output
-//			int result = stoi(s);
-//			int histogram[66];
-//			for (int k = 0; k < 66; k++)
-//			{
-//				getline(infile, s);//text
-//				getline(infile, s);//val
-//				histogram[k] = stoi(s);
-//			}
-//			outfile << trialNum << "," << clientID << "," << result << ",";
-//			for (int i = 0; i < 66; i++)
-//			{
-//				outfile << histogram[i] << ",";
-//			}
-//			outfile << endl;
-//		}
-//		trialNum++;
-//	}
-//	return;
-//}
 void setGlobalsFromSettings()//double scoreMat[][4][2][2])
 {
 	for (int one = 0; one < 4; one++)
@@ -1530,116 +1028,6 @@ void setGlobalsFromSettings()//double scoreMat[][4][2][2])
 	}
 	scoreMat[3][3][1][1] = finalval;
 }
-//void testScoreMat(double chain, double crab)
-//{
-//	ifstream infile("race_results.txt");
-//	vector<BilgeHist> race_results;
-//	string s;
-//	int trialNum = 0;
-//	for (int z = 0; z < 136; z++)
-//	{
-//
-//		getline(infile, s); //number of hists for this lp
-//
-//		getline(infile, s); //advance past this one: we know its 2
-//		for (int j = 0; j < 2; j++)
-//		{
-//			BilgeHist round;
-//			getline(infile, s); //text
-//			getline(infile, s);// client ID
-//			int clientID = stoi(s);
-//			getline(infile, s); //text
-//			getline(infile, s); //output
-//			int result = stoi(s);
-//			round.won = result;
-//			getline(infile, s); //text
-//			getline(infile, s); //chain
-//			int chain = stoi(s);
-//			round.numChains = chain;
-//			getline(infile, s); //text
-//			getline(infile, s); //crab
-//			int crab = stoi(s);
-//			round.crabScore = crab;
-//
-//			for (int a = 0; a < 4; a++)
-//			{
-//				for (int b = 0; b < 4; b++)
-//				{
-//					for (int c = 0; c < 2; c++)
-//					{
-//						for (int d = 0; d < 2; d++)
-//						{
-//							getline(infile, s);//text
-//							getline(infile, s);//val
-//							round.frequencies[a][b][c][d] = stoi(s);
-//						}
-//					}
-//				}
-//			}
-//			//set it equal to the current one
-//			race_results.push_back(round);
-//
-//		}
-//		trialNum++;
-//	}
-//	//now we have a vector that are pairwise in the same round, so we can apply the scoremat to each one and figureout how good it is
-//	double numCorrect = 0;
-//	int numScored = 0;
-//	double score_mat[4][4][2][2];
-//	setScoreMat(score_mat);
-//	for (int k = 0; k + 1 < race_results.size(); k += 2)
-//	{
-//		assert(race_results[k].won == race_results[k + 1].won);
-//		double scoreA = 0;
-//		double scoreB = 0;
-//
-//		//chain
-//		scoreA += race_results[k].numChains * chain;
-//		scoreB += race_results[k + 1].numChains * chain;
-//
-//		//crab
-//		scoreA += race_results[k].crabScore * crab;
-//		scoreB += race_results[k + 1].crabScore * crab;
-//
-//		// create a scoremat to use
-//
-//		// the big one
-//		for (int a = 0; a < 4; a++)
-//		{
-//			for (int b = 0; b < 4; b++)
-//			{
-//				for (int c = 0; c < 2; c++)
-//				{
-//					for (int d = 0; d<2; d++)
-//					{
-//						scoreA += race_results[k].frequencies[a][b][c][d] * score_mat[a][b][c][d];
-//						scoreB += race_results[k + 1].frequencies[a][b][c][d] * score_mat[a][b][c][d];
-//					}
-//				}
-//			}
-//		}
-//		//now compare results
-//		if (scoreA > scoreB)
-//		{
-//			numScored++;
-//			if (race_results[k].won)
-//			{
-//				numCorrect++;
-//			}
-//		}
-//		else if (scoreA <= scoreB)
-//		{
-//			numScored++;
-//			if (!race_results[k].won)
-//			{
-//				numCorrect++;
-//			}
-//		}
-//	}
-//	assert(numScored * 2 == race_results.size());
-//	cout << "we got " << numCorrect / ((double)race_results.size() / 2.0) << "% Correct" << endl;
-//	return;
-//}
 int main()
 {
 	//concurrency::parallel_for(0, 60, [&](size_t i){
