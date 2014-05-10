@@ -1,15 +1,18 @@
-#ifndef BOARD_H
-#define BOARD_H
+#pragma once
 #include <iostream>
 #include <fstream>
 //#include <omp.h>
 #include <ppl.h>
 #define NUMROWS 12
 #define NUMCOLS 6
-#define MAXDEPTH 4
+
 //Global
 const int WATERLEVEL=9;
-
+// Set with settings file
+extern double scoreMat[4][4][2][2];
+extern int UNCERTAINTY_SCORE;
+extern int SINGLESSCORE;
+extern int MAXDEPTH;
 void initScore();
 struct Coord
 {
@@ -47,5 +50,3 @@ public:
 	char mboard[12][6];
 private:
 };
-
-#endif

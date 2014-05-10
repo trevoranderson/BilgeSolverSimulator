@@ -1,0 +1,53 @@
+! Please do not edit lines beginning with '!'.
+! Keep all numbers non-negative integers.
+! All values are relative. If you need more precision feel free to multiply
+! them all by 10
+!
+! Depth to Search
+3
+! Single: Pieces Cleared not part of a combo 
+10
+! Uncertainty Score: Higher value = more incentive to take good moves earlier.
+1
+! Three
+30
+! Four
+40
+! Five
+50
+! Three by Three
+120
+! three by four
+140
+! three by five
+160
+! four by four
+160
+! four by five
+180
+! five by five
+200
+! Bingo 3x3x3
+240
+! Bingo 3x3x4
+270
+! Bingo 3x4x4
+300
+! Bingo 3x3x5
+300
+! Bingo 3x4x5
+330
+! Bingo 3x5x5
+360
+! Donkey 3x3x3x3
+800
+! Donkey 3x3x3x4
+880
+! Donkey 3x3x4x4
+960
+! Vegas 3x3x3x5
+1440
+! Vegas 3x3x4x5
+1560
+! Vegas 3x3x5x5
+1680

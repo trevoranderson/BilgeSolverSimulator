@@ -1147,7 +1147,7 @@ void BOT()
 				scoreTracker << moveCounter << "," << myScore << "," << (totalScore / (double)moveCounter) << endl;
 				cout << "Index:" << index << " R: " << row << " C: " << col << " score:" << myScore << " Average:" << (totalScore / (double)moveCounter) << " Time:" << timeTaken << " Seconds" << endl;
 				MM.PlayBetweenPoints(start, Dest, BellRand(0.8, 0.8));
-				Sleep(BellRand(100, 100));
+				Sleep(BellRand(200, 150));
 				MM.Click();
 				//Now add the board's score to the proper bilge Hist
 				re_evalMove(curBoards[index].mBoard, row, col, Runners[index]);
@@ -1182,6 +1182,17 @@ int coutntehliens()
 	return count(istreambuf_iterator<char>(inFile),
 		istreambuf_iterator<char>(), '\n');
 
+}
+bool fileExists(const std::string& name) {
+	ifstream f(name.c_str());
+	if (f.good()) {
+		f.close();
+		return true;
+	}
+	else {
+		f.close();
+		return false;
+	}
 }
 //void createScoreAlgo()
 //{
@@ -1221,7 +1232,7 @@ int coutntehliens()
 //	}
 //	return;
 //}
-void setScoreMat(double mat_to_set[][4][2][2])
+void setGlobalsFromSettings()//double scoreMat[][4][2][2])
 {
 	for (int one = 0; one < 4; one++)
 	{
@@ -1231,55 +1242,293 @@ void setScoreMat(double mat_to_set[][4][2][2])
 			{
 				for (int four = 0; four < 2; four++)
 				{
-					mat_to_set[one][two][three][four] = 0;
+					scoreMat[one][two][three][four] = 0;
 				}
 			}
 		}
 	}
-	//ima do diss TZZ style
-	mat_to_set[0][0][0][0];
+	vector<int> Scores;
+	if (fileExists("_settings"))
+	{
+		ifstream settingsFile("_settings");
+		string curLine;
+		for (auto &i : Scores){ i = 0; }
+		while (getline(settingsFile, curLine))
+		{
+			if (curLine.size() > 0)
+			{
+				if (curLine[0] != '!')
+				{
+					Scores.push_back(stoi(curLine));
+				}
+			}
+		}
+	}
+	int scoreInd = 0;
+	int finalval = 1;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 3;
+	}
+	MAXDEPTH = finalval;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 1;
+	}
+	SINGLESSCORE = finalval;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 1;
+	}
+	UNCERTAINTY_SCORE = finalval;
+	// Defaults to TZZ style scoring
+	scoreMat[0][0][0][0];
 	// single 3 -> 3pts
-	mat_to_set[0][0][0][1] = mat_to_set[0][0][1][0] = mat_to_set[0][1][0][0] = mat_to_set[1][0][0][0] = 30;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 30;
+	}
+	scoreMat[0][0][0][1] = scoreMat[0][0][1][0] = scoreMat[0][1][0][0] = scoreMat[1][0][0][0] = finalval;
 	// single 4 -> 4pts
-	mat_to_set[2][0][0][0] = mat_to_set[0][2][0][0] = 40;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 40;
+	}
+	scoreMat[2][0][0][0] = scoreMat[0][2][0][0] = finalval;
 	// single 5 -> 5pts
-	mat_to_set[3][0][0][0] = mat_to_set[0][3][0][0] = 50;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 50;
+	}
+	scoreMat[3][0][0][0] = scoreMat[0][3][0][0] = finalval;
 	//      3x3 -> 12pts
-	mat_to_set[1][1][0][0] = mat_to_set[1][0][1][0] = mat_to_set[1][0][0][1] = mat_to_set[0][1][1][0] = mat_to_set[0][1][0][1] = mat_to_set[0][0][1][1] = 120;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 120;
+	}
+	scoreMat[1][1][0][0] = scoreMat[1][0][1][0] = scoreMat[1][0][0][1] = scoreMat[0][1][1][0] = scoreMat[0][1][0][1] = scoreMat[0][0][1][1] = finalval;
 	//      3x4 -> 14pts
-	mat_to_set[2][1][0][0] = mat_to_set[2][0][1][0] = mat_to_set[2][0][0][1] = mat_to_set[1][2][0][0] = mat_to_set[0][2][1][0] = mat_to_set[0][2][0][1] = 140;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 140;
+	}
+	scoreMat[2][1][0][0] = scoreMat[2][0][1][0] = scoreMat[2][0][0][1] = scoreMat[1][2][0][0] = scoreMat[0][2][1][0] = scoreMat[0][2][0][1] = finalval;
 	//      3x5 -> 16pts
-	mat_to_set[3][1][0][0] = mat_to_set[3][0][1][0] = mat_to_set[3][0][0][1] = mat_to_set[1][3][0][0] = mat_to_set[0][3][1][0] = mat_to_set[0][3][0][1] = 160;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 160;
+	}
+	scoreMat[3][1][0][0] = scoreMat[3][0][1][0] = scoreMat[3][0][0][1] = scoreMat[1][3][0][0] = scoreMat[0][3][1][0] = scoreMat[0][3][0][1] = finalval;
 	//		4x4 -> 16
-	mat_to_set[2][2][0][0] = 160;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 160;
+	}
+	scoreMat[2][2][0][0] = finalval;
 	//		4x5 -> 18
-	mat_to_set[2][3][0][0] = mat_to_set[3][2][0][0] = 180;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 180;
+	}
+	scoreMat[2][3][0][0] = scoreMat[3][2][0][0] = finalval;
 	//		5x5 -> 20
-	mat_to_set[3][3][0][0] = 200;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 200;
+	}
+	scoreMat[3][3][0][0] = finalval;
 	//333 Bingo -> 24pts
-	mat_to_set[1][1][1][0] = mat_to_set[1][1][0][1] = mat_to_set[1][0][1][1] = mat_to_set[0][1][1][1] = 240;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 240;
+	}
+	scoreMat[1][1][1][0] = scoreMat[1][1][0][1] = scoreMat[1][0][1][1] = scoreMat[0][1][1][1] = finalval;
 	//334 Bingo -> 27pts
-	mat_to_set[2][1][1][0] = mat_to_set[2][1][0][1] = mat_to_set[2][0][1][1] = mat_to_set[1][2][1][0] = mat_to_set[1][2][0][1] = mat_to_set[0][2][1][1] = 270;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 270;
+	}
+	scoreMat[2][1][1][0] = scoreMat[2][1][0][1] = scoreMat[2][0][1][1] = scoreMat[1][2][1][0] = scoreMat[1][2][0][1] = scoreMat[0][2][1][1] = finalval;
 	//344 Bingo -> 30pts
-	mat_to_set[2][2][1][0] = mat_to_set[2][2][0][1] = 300;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 300;
+	}
+	scoreMat[2][2][1][0] = scoreMat[2][2][0][1] = finalval;
 	//335 Bingo -> 30pts
-	mat_to_set[3][1][1][0] = mat_to_set[3][1][0][1] = mat_to_set[3][0][1][1] = mat_to_set[1][3][1][0] = mat_to_set[1][3][0][1] = mat_to_set[0][3][1][1] = 300;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 300;
+	}
+	scoreMat[3][1][1][0] = scoreMat[3][1][0][1] = scoreMat[3][0][1][1] = scoreMat[1][3][1][0] = scoreMat[1][3][0][1] = scoreMat[0][3][1][1] = finalval;
 	//345 Bingo -> 33pts
-	mat_to_set[3][2][1][0] = mat_to_set[3][2][0][1] = mat_to_set[2][3][1][0] = mat_to_set[2][3][0][1] = 330;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 330;
+	}
+	scoreMat[3][2][1][0] = scoreMat[3][2][0][1] = scoreMat[2][3][1][0] = scoreMat[2][3][0][1] = finalval;
 	//355 Bingo -> 36pts
-	mat_to_set[3][3][1][0] = mat_to_set[3][3][0][1] = 360;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 360;
+	}
+	scoreMat[3][3][1][0] = scoreMat[3][3][0][1] = finalval;
 	//3333donkey-> 80pts
-	mat_to_set[1][1][1][1] = 800;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 800;
+	}
+	scoreMat[1][1][1][1] = finalval;
 	//3334donkey-> 88pts
-	mat_to_set[2][1][1][1] = mat_to_set[1][2][1][1] = 880;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 880;
+	}
+	scoreMat[2][1][1][1] = scoreMat[1][2][1][1] = finalval;
 	//3344donkey-> 96pts
-	mat_to_set[2][2][1][1] = 960;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 960;
+	}
+	scoreMat[2][2][1][1] = finalval;
 	//3335vegas-> 144pts
-	mat_to_set[3][1][1][1] = mat_to_set[1][3][1][1] = 1440;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 1440;
+	}
+	scoreMat[3][1][1][1] = scoreMat[1][3][1][1] = finalval;
 	//3345vegas-> 156pts
-	mat_to_set[3][2][1][1] = mat_to_set[2][3][1][1] = 1560;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 1560;
+	}
+	scoreMat[3][2][1][1] = scoreMat[2][3][1][1] = finalval;
 	//3355vegas-> 168pts
-	mat_to_set[3][3][1][1] = 1680;
+	if (scoreInd < Scores.size() && Scores[scoreInd])
+	{
+		finalval = Scores[scoreInd];
+		scoreInd++;
+	}
+	else
+	{
+		finalval = 1680;
+	}
+	scoreMat[3][3][1][1] = finalval;
 }
 //void testScoreMat(double chain, double crab)
 //{
@@ -1393,7 +1642,17 @@ void setScoreMat(double mat_to_set[][4][2][2])
 //}
 int main()
 {
+	//concurrency::parallel_for(0, 60, [&](size_t i){
+	//	cout << i << endl;
+	//	
+	//});
+	//for (int i = 0; i < NUMROWS*NUMCOLS; i++)
+	//{
 
+	//	int r = i / NUMCOLS;
+	//	int c = i - (r * NUMCOLS);
+	//	cout << r << "," << c << endl;
+	//}
 	//string k;
 	//getline(cin, k);
 	//// Now playback the movement;
@@ -1412,7 +1671,8 @@ int main()
 	//colorPickerLoop();
 	//setup
 	srand(time(NULL));
-	initScore();
+	setGlobalsFromSettings();
+	//initScore();
 	GetDesktopResolution(SCREENWIDTH, SCREENHEIGHT);
 	//the bot part
 
